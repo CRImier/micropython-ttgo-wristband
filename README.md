@@ -1,8 +1,23 @@
 # micropython-ttgo-wristband
 Code and data about TTGO/LilyGo T-Wristband and running MicroPython on it
 
-- `esp32-idf4-20191220-v1.12.bin`
-  - The MicroPython image I'm using with this board
+Working:
+
+- I2C interface
+- Touch button
+- Deepsleep wake using touch button
+
+Not yet working (code not written/not yet tested/imperfect):
+
+- Display backlight
+- Display
+- MPU-9250
+- RTC
+- VBAT ADC
+- VBUS ADC
+- Charging detection
+
+
 - `main.py`
   - My current `main.py` file
 - `hw.py`
@@ -25,4 +40,8 @@ Code and data about TTGO/LilyGo T-Wristband and running MicroPython on it
   - Script that contains the commandline to write the original image back to the ESP32
 - `interesting_things_orig_image.md`
   - Interesting observations about the original image
+- `esp32-idf4-20191220-v1.12.bin`
+  - The MicroPython image I'm using with this board
+- `flash_micropython.sh`
+  - A script to flash the MicroPython image included
 

@@ -39,7 +39,7 @@ touch_en = Pin(touch_en_p, Pin.OUT)
 rtc_int = Pin(rtc_int_p, Pin.IN)
 mpu_int = Pin(mpu_int_p, Pin.IN)
 
-lcd_bl = Pin(lcd_bl_p, Pin.OUT)
+lcd_bl = Pin(lcd_bl_p, Pin.OUT, None)
 
 lcd = ST7735(160, 80, spi, Pin(lcd_cs_p), Pin(lcd_dc_p), Pin(lcd_rst_p))
 
