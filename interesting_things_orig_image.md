@@ -31,5 +31,3 @@ g5h=G=F5F5F-%
 %d-%d-%d/%d:%d:%d
 syncToRtc: %d %d %d - %d %d %d 
 ```
-
-Source for the original firmware is not available, but at least we can export some strings, feel free to take this further.
