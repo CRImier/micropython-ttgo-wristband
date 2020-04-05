@@ -1,0 +1,73 @@
+# Pressing the "RESET" button on the breakout
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 188777542, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:928
+ho 0 tail 12 room 4
+load:0x40078000,len:8740
+load:0x40080400,len:5788
+entry 0x4008069c
+# Around this point, the TTGO logo is shown
+I2C device found at address 0x0C !
+I2C device found at address 0x51 !
+I2C device found at address 0x69 !
+Done
+# This is where the display shows the "write datetime pass" thing
+	9:5:57
+	9:5:58
+	9:5:59
+	9:6:0
+# This is where the display shows doing the "write datetime pass" thing
+# Then, it scans WiFi and shows the wifi scan results
+[1]:Internet1(-51)
+[2]:Internet2(-59)
+MPU9250 I AM 71 I should be 71
+MPU9250 is online...
+MPU9250 acceleration and gyration self test done!
+MPU9250 initialized for active data mode....
+AK8963 I AM 48 I should be 48
+AK8963 initialized for active data mode....
+AK8963 magCalibration done!
+eFuse Vref:1086 # A clock is shown here, same for sensor data which is shown when you press the touch button once again # mVrb:1
+wb:41
+Go to Sleep
+# Wristband goes into deepsleep
+
+# Here, the touch button is pressed again
+ets Jun  8 2016 00:22:57
+
+rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 188777542, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:928
+ho 0 tail 12 room 4
+load:0x40078000,len:8740
+load:0x40080400,len:5788
+entry 0x4008069c
+I2C device found at address 0x0C !
+I2C device found at address 0x51 !
+I2C device found at address 0x69 !
+Done
+
+	9:5:57
+	9:5:58
+	9:5:59
+	9:6:0
+[1]:Internet1(-51)
+[2]:Internet2(-59)
+MPU9250 I AM 71 I should be 71
+MPU9250 is online...
+MPU9250 acceleration and gyration self test done!
+MPU9250 initialized for active data mode....
+AK8963 I AM 48 I should be 48
+AK8963 initialized for active data mode....
+AK8963 magCalibration done!
+eFuse Vref:1086 mVrb:1
+wb:41
+Go to Sleep
