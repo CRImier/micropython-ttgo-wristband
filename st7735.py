@@ -94,7 +94,7 @@ class ST7735:
     def init(self):
         self._write_command(_SWRESET)
         time.sleep_ms(5)
-        self._write_command(_SLPOUT)
+        self.from_sleep()
         time.sleep_ms(50)
         for command, data in (
             (_FRMCTR1, b'\x01\x2c\x2d'),
@@ -109,10 +109,10 @@ class ST7735:
             (_VMCTR1, b'\x0e'),
             (_INVOFF, None),
             (_MADCTL, b'\xe8'),
-            (_COLMOD, b'\x05'), # 16bit color
+            (_COLMOD, b'\x05'),
             (_CASET, b'\x00\x02\x00\x81'),
             (_RASET, b'\x00\x01\x00\xa0'),
-            (_RAMWR, None), # XSTART = 2, XEND = 159
+            (_RAMWR, None),
             (_GMCTRP1, b'\x02\x1c\x07\x12\x37\x32\x29\x2d'
                        b'\x29\x25\x2b\x39\x00\x01\x03\x10'), # Gamma
             (_GMCTRN1, b'\x03\x1d\x07\x06\x2e\x2c\x29\x2d'
@@ -122,7 +122,6 @@ class ST7735:
             if data: self._write_data(data)
         self._write_command(_NORON) # Normal display on
         time.sleep_ms(10)
-        self.from_sleep()
         self.turn_on()
         time.sleep_ms(50)
 
