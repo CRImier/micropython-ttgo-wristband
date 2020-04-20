@@ -4,7 +4,7 @@ max_pwm_duty = 1023
 
 class PWMPin():
     def __init__(self, num, on_duty=1023, off_duty=0, init_value=1):
-        self.p = Pin(num, None, value=init_value)
+        self.p = Pin(num, Pin.OUT, None, value=init_value)
         if on_duty > max_pwm_duty:
             on_duty = max_pwm_duty
         init_duty = on_duty if init_value else off_duty
