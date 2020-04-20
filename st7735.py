@@ -1,6 +1,6 @@
 import time
 import ustruct
-
+import framebuf
 
 _NOP=const(0x00)
 _SWRESET=const(0x01)
@@ -69,13 +69,15 @@ class ST7735:
         self.cs = cs
         self.rs = rs
         self.rst = rst
-        self.cs.init(self.cs.OUT, value=1)
-        self.rs.init(self.rs.OUT, value=0)
-        self.rst.init(self.rst.OUT, value=0)
+
+    def pwron_init(self):
         self.reset()
+        self.init_gpio()
         self.init()
 
     def reset(self):
+        #self.rst.init(self.rst.OUT, None, value=0)
+        self.rst.init(self.rst.OUT, value=0)
         self.rst.on()
         time.sleep_ms(50)
         self.rst.off()
@@ -83,38 +85,58 @@ class ST7735:
         self.rst.on()
         time.sleep_ms(50)
 
+    def init_gpio(self):
+        #self.cs.init(self.cs.OUT, None, value=1)
+        #self.rs.init(self.rs.OUT, None, value=0)
+        self.cs.init(self.cs.OUT, value=1)
+        self.rs.init(self.rs.OUT, value=0)
+
     def init(self):
         self._write_command(_SWRESET)
         time.sleep_ms(5)
         self._write_command(_SLPOUT)
         time.sleep_ms(50)
         for command, data in (
+            (_FRMCTR1, b'\x01\x2c\x2d'),
+            (_FRMCTR2, b'\x01\x2c\x2d'),
+            (_FRMCTR3, b'\x01\x2c\x2d\x01\x2c\x2d'),
+            (_INVCTR, b'0x07'),
+            (_PWCTR1, b'\xa2\x02\x84'),
+            (_PWCTR2, b'\xc5'),
+            (_PWCTR3, b'\x0a\x00'),
+            (_PWCTR4, b'\x8a\x2a'),
+            (_PWCTR5, b'\x8a\xee'),
+            (_VMCTR1, b'\x0e'),
+            (_INVOFF, None),
+            (_MADCTL, b'\xe8'),
             (_COLMOD, b'\x05'), # 16bit color
-            # fastest refresh, 6 lines front porch, 3 line back porch
-            (_FRMCTR1, b'\x00\x06\x03'),
-            (_MADCTL, b'\x08'), # bottom to top refresh
-            # 1 clk cycle nonoverlap, 2 cycle gate rise, 3 sycle osc equalie,
-            # fix on VTL
-            (_DISSET5, b'\x15\x02'),
-            (_INVCTR, b'0x00'), # line inversion
-            (_PWCTR1, b'\x02\x70'), # GVDD = 4.7V, 1.0uA
-            (_PWCTR2, b'\x05'), # VGH=14.7V, VGL=-7.35V
-            (_PWCTR3, b'\x01\x02'), # Opamp current small, Boost frequency
-            (_VMCTR1, b'\x3c\x38'), # VCOMH = 4V, VOML = -1.1V
-            (_PWCTR6, b'\x11\x15'),
-            (_GMCTRP1, b'\x09\x16\x09\x20\x21\x1b\x13\x19'
-                       b'\x17\x15\x1e\x2b\x04\x05\x02\x0e'), # Gamma
-            (_GMCTRN1, b'\x08\x14\x08\x1e\x22\x1d\x18\x1e'
-                       b'\x18\x1a\x24\x2b\x06\x06\x02\x0f'),
-            (_CASET, b'\x00\x02\x00\x81'), # XSTART = 2, XEND = 129
-            (_RASET, b'\x00\x02\x00\x81'), # XSTART = 2, XEND = 129
+            (_CASET, b'\x00\x02\x00\x81'),
+            (_RASET, b'\x00\x01\x00\xa0'),
+            (_RAMWR, None), # XSTART = 2, XEND = 159
+            (_GMCTRP1, b'\x02\x1c\x07\x12\x37\x32\x29\x2d'
+                       b'\x29\x25\x2b\x39\x00\x01\x03\x10'), # Gamma
+            (_GMCTRN1, b'\x03\x1d\x07\x06\x2e\x2c\x29\x2d'
+                       b'\x2e\x2e\x37\x3f\x00\x00\x02\x10'),
         ):
             self._write_command(command)
-            self._write_data(data)
+            if data: self._write_data(data)
         self._write_command(_NORON) # Normal display on
-        time.sleep_ms(1)
-        self._write_command(_DISPON) # Screen on
+        time.sleep_ms(10)
+        self.from_sleep()
+        self.turn_on()
         time.sleep_ms(50)
+
+    def turn_on(self):
+        self._write_command(_DISPON)
+
+    def turn_off(self):
+        self._write_command(_DISPOFF)
+
+    def to_sleep(self):
+        self._write_command(_SLPIN)
+
+    def from_sleep(self):
+        self._write_command(_SLPOUT)
 
     def _write_command(self, command):
         self.rs.off()
@@ -130,11 +152,14 @@ class ST7735:
 
     def _write_block(self, x0, y0, x1, y1, data):
         self._write_command(_CASET)
-        self._write_data(ustruct.pack(">HH", x0, x1))
+        caset = ustruct.pack(">HH", x0+0x01, x1+0x01)
+        self._write_data(caset)
         self._write_command(_RASET)
-        self._write_data(ustruct.pack(">HH", y0, y1))
+        raset = ustruct.pack(">HH", y0+0x1a, y1+0x1a)
+        self._write_data(raset)
         self._write_command(_RAMWR)
-        self._write_data(data)
+        if data:
+            self._write_data(data)
 
     def pixel(self, x, y, color):
         if not 0 <= x < self.width or not 0 <= y < self.height:
@@ -146,7 +171,9 @@ class ST7735:
         y = min(self.height - 1, max(0, y))
         w = min(self.width - x, max(1, w))
         h = min(self.height - y, max(1, h))
-        self._write_block(x, y, x + w - 1, y + h - 1, b'')
+        c = [x, y, x + w - 1, y + h - 1, None]
+        #c.append(b'')
+        self._write_block(*c)
         chunks, rest = divmod(w * h, 512)
         if chunks:
             data = ustruct.pack(">H", color) * 512
@@ -158,3 +185,50 @@ class ST7735:
     def fill(self, color):
         self.fill_rectangle(0, 0, self.width, self.height, color)
 
+    def char(self, char, x, y, color=0xffff, background=0x0000):
+        buffer = bytearray(8)
+        framebuffer = framebuf.FrameBuffer1(buffer, 8, 8)
+        framebuffer.text(char, 0, 0)
+        color = ustruct.pack(">H", color)
+        background = ustruct.pack(">H", background)
+        data = bytearray(2 * 8 * 8)
+        for c, byte in enumerate(buffer):
+            for r in range(8):
+                if byte & (1 << r):
+                    data[r * 8 * 2 + c * 2] = color[0]
+                    data[r * 8 * 2 + c * 2 + 1] = color[1]
+                else:
+                    data[r * 8 * 2 + c * 2] = background[0]
+                    data[r * 8 * 2 + c * 2 + 1] = background[1]
+        self._write_block(x, y, x + 7, y + 7, data)
+
+    def text(self, text, x, y, color=0xffff, background=0x0000, wrap=None,
+             vwrap=None, clear_eol=False):
+        if wrap is None:
+            wrap = self.width - 8
+        if vwrap is None:
+            vwrap = self.height - 8
+        tx = x
+        ty = y
+
+        def new_line():
+            nonlocal tx, ty
+
+            tx = x
+            ty += 8
+            if ty >= vwrap:
+                ty = y
+
+        for char in text:
+            if char == '\n':
+                if clear_eol and tx < wrap:
+                    self.fill_rectangle(tx, ty, wrap - tx + 7, 8, background)
+                new_line()
+            else:
+                if tx >= wrap:
+                    new_line()
+                self.char(char, tx, ty, color, background)
+                tx += 8
+        if clear_eol and tx < wrap:
+            self.fill_rectangle(tx, ty, wrap - tx + 7, 8, background)
+        return tx+8

@@ -6,11 +6,12 @@ Working:
 - I2C interface
 - Touch button
 - Deepsleep wake using touch button
+- Display backlight (PWMed)
+- Display
 
 Not yet working (code not written/not yet tested/imperfect):
 
-- Display backlight
-- Display
+- Putting the display into low-power mode for going to sleep (to avoid re-initting the display when waking up)
 - MPU-9250
 - RTC
 - VBAT ADC
@@ -24,8 +25,10 @@ Not yet working (code not written/not yet tested/imperfect):
   - File with hardware definitions - pins, interfaces, some helper functions
 - `st7735.py`
   - st7735 driver - not mine, taken from some other project, is under a different license
+- `pwm_pin.py`
+  - An object for a PWM-driven pin that still allows to treat the PWM object as a pin ( with .on(), .off() and .value(value) )
 - `wifi.py`
-  - File with WiFi settings
+  - File for your WiFi settings
 - `ttp223_deepsleep_example.py`
   - A standalone example of how to do deepsleep with the TTP223
 - `orig_image.bin`
