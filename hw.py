@@ -43,6 +43,11 @@ vbat = ADC(Pin(vbat_p))
 vbus = ADC(Pin(vbus_p))
 chg = Pin(chg_p, Pin.IN, Pin.PULL_UP)
 
+vbat.atten(ADC.ATTN_11DB)
+vbus.atten(ADC.ATTN_11DB)
+vbat_coefficient = 0.00169
+vbus_coefficient = 0.00169
+
 touch = Pin(touch_p, Pin.IN, None)
 touch_en = Pin(touch_en_p, Pin.OUT, None)
 
@@ -95,6 +100,25 @@ def deinit_hw_for_deepsleep(leave_touch=True):
         Pin(touch_en_p, Pin.OUT, None)
         Pin(touch_en_p, Pin.OUT, Pin.PULL_HOLD, value=1)
 
+
+def is_charging():
+    return not chg.value()
+
+def battery_voltage(str=False):
+    val = vbat.read()
+    val = val * vbat_coefficient
+    if str:
+        return "{:.2f}".format(val)
+    else:
+        return val
+
+def charging_voltage(str=False):
+    val = vbus.read()
+    val = val * vbus_coefficient
+    if str:
+        return "{:.2f}".format(val)
+    else:
+        return val
 
 # Display functions
 def color565(r, g, b):
