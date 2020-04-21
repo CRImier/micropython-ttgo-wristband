@@ -32,16 +32,17 @@ def deepsleep():
 
 init_all_hw()
 
+led.value(is_charging())
 
 red = color565(255, 0, 0)
 blue = color565(0, 0, 255)
 green = color565(0, 255, 0)
 
 lcd.fill(green)
+lcd.text("ampy", 80-16, 40-4, color=red, background=green)
 lcd_bl.on()
-sleep(1)
+sleep(2)
 
-led.value(is_charging())
 
 """
 lcd.fill(red)
@@ -55,7 +56,6 @@ lcd.fill_rectangle(10, 15, 20, 30, green|red)
 lcd.fill_rectangle(30, 45, 20, 30, blue|red)
 """
 
-sleep(1)
 lcd.fill(0)
 lcd.text("Hello world!", 0, 0, color=green)
 lcd.text(" ".join([hex(i) for i in i2c.scan()]), 0, 10, color=blue)
