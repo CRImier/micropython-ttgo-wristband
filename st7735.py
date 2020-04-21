@@ -71,13 +71,11 @@ class ST7735:
         self.rst = rst
 
     def pwron_init(self):
-        self.reset()
         self.init_gpio()
+        self.reset()
         self.init()
 
     def reset(self):
-        #self.rst.init(self.rst.OUT, None, value=0)
-        self.rst.init(self.rst.OUT, value=0)
         self.rst.on()
         time.sleep_ms(50)
         self.rst.off()
@@ -86,10 +84,15 @@ class ST7735:
         time.sleep_ms(50)
 
     def init_gpio(self):
-        #self.cs.init(self.cs.OUT, None, value=1)
-        #self.rs.init(self.rs.OUT, None, value=0)
+        self.rst.init(self.rst.OUT, None, value=1)
+        #self.rst.init(self.rst.IN)
+        self.rst.init(self.rst.OUT, value=1)
+        self.cs.init(self.cs.OUT, None, value=1)
+        #self.cs.init(self.cs.IN)
         self.cs.init(self.cs.OUT, value=1)
-        self.rs.init(self.rs.OUT, value=0)
+        self.rs.init(self.rs.OUT, None, value=0)
+        #self.rs.init(self.rs.IN)
+        self.rs.init(self.rs.OUT, value=1)
 
     def init(self):
         self._write_command(_SWRESET)

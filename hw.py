@@ -1,4 +1,5 @@
 from machine import Pin, ADC, I2C, SPI
+from time import sleep_ms
 import machine
 import gc
 
@@ -34,10 +35,12 @@ led = PWMPin(led_p, on_duty=512, init_value=0)
 
 i2c = I2C(sda=Pin(sda_p, Pin.OUT, None), scl=Pin(scl_p, Pin.OUT, None))
 
-#sck = Pin(lcd_sck_p, Pin.OUT, None)
-#mosi = Pin(lcd_sck_p, Pin.OUT, None)
+sck = Pin(lcd_sck_p, Pin.OUT, None)
+mosi = Pin(lcd_mosi_p, Pin.OUT, None)
+sck.init(Pin.OUT)
+mosi.init(Pin.OUT)
 #spi = SPI(2, sck=sck, mosi=mosi, miso=Pin(lcd_miso_p), baudrate=20*1000*1000, polarity=0, phase=0)
-spi = SPI(2, sck=Pin(lcd_sck_p), mosi=Pin(lcd_mosi_p), miso=Pin(lcd_miso_p), baudrate=20*1000*1000, polarity=0, phase=0)
+spi = SPI(2, sck=sck, mosi=mosi, miso=Pin(lcd_miso_p), baudrate=20*1000*1000, polarity=0, phase=0)
 
 vbat = ADC(Pin(vbat_p))
 vbus = ADC(Pin(vbus_p))
@@ -61,14 +64,18 @@ lcd = ST7735(160, 80, spi, Pin(lcd_cs_p), Pin(lcd_dc_p), Pin(lcd_rst_p))
 def init_display(reset_cause=None):
     if reset_cause is None:
         reset_cause = machine.reset_cause()
-    """if reset_cause in (machine.PWRON_RESET, machine.HARD_RESET):
-        print("Doing hard HW reset")"""
-    lcd.pwron_init()
-    """elif reset_cause in (machine.WDT_RESET, machine.DEEPSLEEP_RESET, machine.SOFT_RESET):
+    if reset_cause in (machine.PWRON_RESET, machine.HARD_RESET):
+        print("Doing hard HW reset")
+        lcd.pwron_init()
+    elif reset_cause in (machine.WDT_RESET, machine.DEEPSLEEP_RESET, machine.SOFT_RESET):
         print("Doing soft HW bringup")
-        lcd.init_gpio()
-        lcd.from_sleep()
-        lcd.turn_on()"""
+        lcd.pwron_init()
+        # Can't make the soft LCD bringup work =(
+        #lcd.init_gpio()
+        #lcd.from_sleep()
+        #sleep_ms(50)
+        #lcd.turn_on()
+        #sleep_ms(50)
 
 def init_all_hw():
     init_display()

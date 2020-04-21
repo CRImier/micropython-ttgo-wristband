@@ -8,15 +8,16 @@ Working:
 - Deepsleep wake using touch button
 - Display backlight (PWMed)
 - Display
-
-Not yet working (code not written/not yet tested/imperfect):
-
-- Putting the display into low-power mode for going to sleep (to avoid re-initting the display when waking up)
-- MPU-9250
-- RTC
 - VBAT ADC
 - VBUS ADC
 - Charging detection
+
+Not yet working (code not written/not yet tested/imperfect):
+
+- Properly bringing out the display from low-power mode after deepsleep without a hardware reset of the display
+- Bringing up the display after a Ctrl+D soft reset (is brought up from power-on reset and from deepsleep reset)
+- MPU-9250
+- RTC
 
 
 - `main.py`
