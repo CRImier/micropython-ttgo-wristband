@@ -181,8 +181,9 @@ class ST7735:
             data = ustruct.pack(">H", color) * 512
             for count in range(chunks):
                 self._write_data(data)
-        data = ustruct.pack(">H", color) * rest
-        self._write_data(data)
+        if rest:
+            data = ustruct.pack(">H", color) * rest
+            self._write_data(data)
 
     def fill(self, color):
         self.fill_rectangle(0, 0, self.width, self.height, color)
@@ -203,6 +204,25 @@ class ST7735:
                     data[r * 8 * 2 + c * 2] = background[0]
                     data[r * 8 * 2 + c * 2 + 1] = background[1]
         self._write_block(x, y, x + 7, y + 7, data)
+
+    def char_from_buffer(self, buf, x, y, w=16, color=0xffff, background=0x0000):
+        h = len(buf) / (w/8) * 2
+        h = int(h)
+        color = ustruct.pack(">H", color)
+        background = ustruct.pack(">H", background)
+        data = bytearray(w * h)
+        for c, byte in enumerate(buf):
+            for r in range(8):
+                pos = c * w + r * 2
+                if c % 1 == 1: r = r; pos += 8
+                else: r = 7-r
+                if byte & (1 << r):
+                    data[pos] = color[0]
+                    data[pos + 1] = color[1]
+                else:
+                    data[pos] = background[0]
+                    data[pos + 1] = background[1]
+        self._write_block(x, y, x + w-1, y + h-1, data)
 
     def text(self, text, x, y, color=0xffff, background=0x0000, wrap=None,
              vwrap=None, clear_eol=False):

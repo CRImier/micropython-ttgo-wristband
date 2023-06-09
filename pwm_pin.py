@@ -3,8 +3,8 @@ from machine import Pin, PWM
 max_pwm_duty = 1023
 
 class PWMPin():
-    def __init__(self, num, on_duty=1023, off_duty=0, init_value=1):
-        self.p = Pin(num, Pin.OUT, None, value=init_value)
+    def __init__(self, num, on_duty=1023, off_duty=0, init_value=1, pin_init_value=None):
+        self.p = Pin(num, Pin.OUT, None, value=init_value if pin_init_value is None else pin_init_value)
         if on_duty > max_pwm_duty:
             on_duty = max_pwm_duty
         init_duty = on_duty if init_value else off_duty
