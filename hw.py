@@ -1,4 +1,4 @@
-from machine import Pin, ADC, I2C, SPI
+from machine import Pin, ADC, I2C, SPI, RTC
 from time import sleep_ms
 import machine
 import gc
@@ -37,6 +37,10 @@ vibro_p = 14
 vibro = PWMPin(vibro_p, on_duty=512, off_duty=0, init_value=0, pin_init_value=0)
 
 # Custom hardware end
+
+# internal RTC
+
+irtc = RTC()
 
 led = PWMPin(led_p, on_duty=1000, init_value=0)
 

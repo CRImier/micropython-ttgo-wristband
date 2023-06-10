@@ -16,6 +16,7 @@ def scan_i2c():
     print([hex(i) for i in i2c.scan()])
 
 run_time = 60
+run_time_muted = 300
 print(reset_cause_hr())
 
 #scan_i2c()
@@ -39,6 +40,22 @@ def deepsleep(*args):
     print("Sleeping")
     machine.deepsleep(*args)
 
+# Manipulating variables in rtc ram
+
+def get_muted():
+    rtc_contents = irtc.memory()
+    if rtc_contents == b'':
+        # uninitialized
+        irtc.memory(b'\x00')
+        muted = False
+    else:
+        muted = bool(irtc.memory()[0] & 0b1)
+    return muted
+
+def set_muted(state):
+    data = bytes([0|state,])
+    irtc.memory(data)
+
 print(time())
 init_all_hw() # touch is initialized here
 # however, touchpad will not be recognized as "held" from when the touchpad IC is powered on
@@ -51,6 +68,8 @@ black = color565(0, 0, 0)
 cyan = color565(0x60, 0xd0, 0xf0)
 pink = color565(0xf0, 0xb0, 0xc0)
 white = color565(0xff, 0xff, 0xff)
+orange = color565(0xff, 0xa5, 0x00)
+porple = color565(0xb0, 0x0b, 0x69)
 
 lcd.fill(black)
 lcd_bl.on()
@@ -73,19 +92,35 @@ lcd.fill_rectangle(10, 15, 20, 30, green|red)
 lcd.fill_rectangle(30, 45, 20, 30, blue|red)
 """
 
-
 lcd.text("Hello world!", 0, 0, color=cyan)
 lcd.text(" ".join([hex(i) for i in i2c.scan()]), 0, 10, color=pink)
 lcd.text("Going to sleep in", 0, 30, color=pink)
 lcd.text("3 seconds!", 0, 40, color=cyan)
 
+# check the touch button having been released
+touch_released = touch.value() == 0
+
+muted = get_muted()
+
 for i in range(4):
     voltage_texts = battery_voltage(str=True) + "Vb " + charging_voltage(str=True) + "Vc"
     lcd.text(voltage_texts, 0, 20, color=white)
     lcd.text(str(2-i//2)+" seconds!", 0, 40, color=cyan)
-    if i == 0: vibro.on()
+    if i == 0 and not muted: vibro.on()
     sleep(0.5)
-    if i == 0: vibro.off()
+    if i == 0 and not muted: vibro.off()
+
+# check the touch button still being held
+if touch_released:
+    if touch.value():
+        # toggle the mute state
+        muted = not muted
+        set_muted(muted)
+        text = "Muted!" if muted else "Unmuted!"
+        lcd.text(text, 0, 50, color=porple)
+
+if muted:
+    run_time = run_time_muted
 
 time_before_sleep = time()
 time_spent = time_before_sleep-start_time
