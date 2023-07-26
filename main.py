@@ -10,14 +10,14 @@ esp.osdebug(None)
 
 import wifi
 wifi.default_setup()
-wifi.connect()
 
 def scan_i2c():
     print([hex(i) for i in i2c.scan()])
 
 run_time = 60
 run_time_muted = 300
-print(reset_cause_hr())
+#print(reset_cause)
+#print(wake_cause)
 
 #scan_i2c()
 
@@ -97,8 +97,9 @@ lcd.text(" ".join([hex(i) for i in i2c.scan()]), 0, 10, color=pink)
 lcd.text("Going to sleep in", 0, 30, color=pink)
 lcd.text("3 seconds!", 0, 40, color=cyan)
 
-# check the touch button having been released
-touch_released = touch.value() == 0
+# touch button timing querying
+touches = []
+touches.append(touch.value())
 
 muted = get_muted()
 
@@ -106,18 +107,25 @@ for i in range(4):
     voltage_texts = battery_voltage(str=True) + "Vb " + charging_voltage(str=True) + "Vc"
     lcd.text(voltage_texts, 0, 20, color=white)
     lcd.text(str(2-i//2)+" seconds!", 0, 40, color=cyan)
-    if i == 0 and not muted: vibro.on()
+    if i == 0:
+        if not muted or wake_cause == "PIN_WAKE": vibro.on()
+        touches.append(touch.value())
     sleep(0.5)
-    if i == 0 and not muted: vibro.off()
+    if i == 0:
+        if not muted or wake_cause == "PIN_WAKE": vibro.off()
+    elif i == 1:
+        touches.append(touch.value())
 
-# check the touch button still being held
-if touch_released:
-    if touch.value():
-        # toggle the mute state
-        muted = not muted
-        set_muted(muted)
-        text = "Muted!" if muted else "Unmuted!"
-        lcd.text(text, 0, 50, color=porple)
+touches.append(touch.value())
+
+# touch button was held until the motor vibrated
+print(touches)
+if not touches[0] and touches[3]:
+    # toggle the mute state
+    muted = not muted
+    set_muted(muted)
+    text = "Muted!" if muted else "Unmuted!"
+    lcd.text(text, 0, 50, color=porple)
 
 if muted:
     run_time = run_time_muted
