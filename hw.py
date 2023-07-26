@@ -40,6 +40,21 @@ vibro = PWMPin(vibro_p, on_duty=512, off_duty=0, init_value=0, pin_init_value=0)
 
 # internal RTC
 
+reset_causes = ['DEEPSLEEP_RESET', 'HARD_RESET', 'PWRON_RESET', 'SOFT_RESET', 'WDT_RESET']
+reset_causes = {getattr(machine, name):name for name in reset_causes}
+
+wake_causes = ["PIN_WAKE", "EXT1_WAKE", "TIMER_WAKE", "TOUCHPAD_WAKE", "ULP_WAKE"]
+wake_causes = {getattr(machine, name):name for name in wake_causes}
+
+def reset_cause_hr():
+    return reset_causes.get(machine.reset_cause(), "UNKNOWN_RESET")
+
+def wake_cause_hr():
+    return wake_causes.get(machine.wake_reason(), "UNKNOWN_WAKE")
+
+reset_cause = reset_cause_hr()
+wake_cause = wake_cause_hr()
+
 irtc = RTC()
 
 led = PWMPin(led_p, on_duty=1000, init_value=0)
@@ -64,7 +79,11 @@ vbat_coefficient = 0.00169
 vbus_coefficient = 0.00169
 
 touch = Pin(touch_p, Pin.IN, None)
-touch_en = Pin(touch_en_p, Pin.OUT, 1)
+
+if reset_cause != 'DEEPSLEEP_RESET':
+    # need to set pin to a "source power" state again
+    # unless we're coming out from deep sleep
+    touch_en = Pin(touch_en_p, Pin.OUT, 1)
 
 rtc_int = Pin(rtc_int_p, Pin.IN, None)
 mpu_int = Pin(mpu_int_p, Pin.IN, None)
@@ -72,6 +91,15 @@ mpu_int = Pin(mpu_int_p, Pin.IN, None)
 lcd_bl = PWMPin(lcd_bl_p, on_duty=512, init_value=0)
 
 lcd = ST7735(160, 80, spi, Pin(lcd_cs_p), Pin(lcd_dc_p), Pin(lcd_rst_p))
+
+"""
+>>> from mpu9250 import MPU9250
+>>> from mpu6500 import MPU6500
+>>> m = MPU6500(i2c, address=0x69)
+>>> m = MPU9250(i2c, mpu6500=m)
+>>> i2c.scan()
+[12, 81, 105]
+"""
 
 def init_display(reset_cause=None):
     if reset_cause is None:
@@ -90,7 +118,10 @@ def init_display(reset_cause=None):
         #sleep_ms(50)
 
 def init_all_hw():
-    touch_en.value(1)
+    try:
+        touch_en.value(1)
+    except NameError:
+        pass
     init_display()
 
 def deinit_hw_for_deepsleep(leave_touch=True):
@@ -157,8 +188,3 @@ def draw_char_16(char, x, y):
 def get_hall_sensor(i=100):
     return sum([esp32.hall_sensor() for _ in range(i)])/i
 
-reset_causes = ['DEEPSLEEP_RESET', 'HARD_RESET', 'PWRON_RESET', 'SOFT_RESET', 'WDT_RESET']
-reset_causes = {getattr(machine, name):name for name in reset_causes}
-
-def reset_cause_hr():
-    return reset_causes.get(machine.reset_cause(), "UNKNOWN_RESET")
