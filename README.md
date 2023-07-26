@@ -1,5 +1,9 @@
 # micropython-ttgo-wristband
-Code and data about TTGO/LilyGo T-Wristband and running MicroPython on it
+
+~~Code and data about TTGO/LilyGo T-Wristband and running MicroPython on it~~
+
+MicroPython code for the T-Wristband platform. My wristband has an external battery attached - and a vibromotor, too.
+It vibrates every minute. It can also do more.
 
 Working:
 
@@ -11,14 +15,14 @@ Working:
 - VBAT ADC
 - VBUS ADC
 - Charging detection
+- MPU-9250
+- RTC - no lib brought in, but it's query-able over I2C alright (use [this](https://github.com/lewisxhe/PCF8563_PythonLibrary/)?)
 
-Not yet working (code not written/not yet tested/imperfect):
+Not yet fully working (code not written/not yet tested/imperfect):
 
 - Properly bringing out the display from low-power mode after deepsleep without a hardware reset of the display
 - Bringing up the display after a Ctrl+D soft reset (is brought up from power-on reset and from deepsleep reset)
-- MPU-9250
-- RTC
-
+- Some GPIOs might not be brought into/from deepsleep correctly. This might be causing the two previous problems.
 
 - `main.py`
   - My current `main.py` file
@@ -49,3 +53,15 @@ Not yet working (code not written/not yet tested/imperfect):
 - `flash_micropython.sh`
   - A script to flash the MicroPython image included
 
+MPU9250 bringup is two-step. AK8963 won't appear on the I2C bus (0x0C address) until you enable I2C passthrough mode on the MPU6500, and, this board
+has a different I2C address for the MPU6500: 0x69.
+
+```python
+>>> from mpu9250 import MPU9250
+>>> from mpu6500 import MPU6500
+>>> m = MPU6500(i2c, address=0x69)
+>>> m = MPU9250(i2c, mpu6500=m)
+>>> i2c.scan()
+[12, 81, 105]
+```
+MPU9250 code [available from here](https://github.com/tuupola/micropython-mpu9250/)
