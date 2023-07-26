@@ -130,3 +130,6 @@ dmypy.json
 
 # nano cache files
 .*.swp
+
+
+wifi_own*.py
